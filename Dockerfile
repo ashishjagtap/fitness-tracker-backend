@@ -14,4 +14,4 @@ RUN ./mvnw clean package -DskipTests
 EXPOSE 8080
 
 # Run the application
-CMD ["java", "-jar", "target/fitness-tracker-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/myfitnesstracker-0.0.1-SNAPSHOT.jar"]
