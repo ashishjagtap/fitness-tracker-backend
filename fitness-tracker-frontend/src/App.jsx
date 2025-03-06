@@ -80,6 +80,16 @@ function App() {
         });
     };
 
+    const handleDelete = (id) => {
+        fetch(`${API_URL}/api/workouts/${id}`, {
+            method: "DELETE",
+        })
+        .then(() => {
+            setWorkouts(workouts.filter(workout => workout.id !== id));
+        })
+        .catch((error) => console.error("Error deleting workout:", error));
+    };
+
     return (
         <div>
             <h1>Fitness Tracker</h1>
@@ -140,6 +150,8 @@ function App() {
                         <li key={workout.id}>
                             {workout.exercise} - {workout.sets} sets x {workout.reps} reps
                             <button onClick={() => handleEdit(workout)}>Edit</button>
+                            <button onClick={() => handleDelete(workout.id)}>Delete</button>
+
                         </li>
                     ))
                 )}

@@ -34,7 +34,10 @@ public class WorkoutLogService {
             return workoutLogRepository.save(workout);
         }).orElseThrow(() -> new RuntimeException("Workout not found with id: " + id));
     }
-
+    // Delete a workout log by ID
+    public void deleteWorkout(Long id) {
+        workoutLogRepository.deleteById(id);
+    }
 
 
 }
