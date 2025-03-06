@@ -22,4 +22,19 @@ public class WorkoutLogService {
     public WorkoutLog saveWorkout(WorkoutLog workoutLog) {
         return workoutLogRepository.save(workoutLog);
     }
+
+    // Update an existing workout log
+    public WorkoutLog updateWorkout(Long id, WorkoutLog updatedWorkout) {
+        return workoutLogRepository.findById(id).map(workout -> {
+            workout.setExercise(updatedWorkout.getExercise());
+            workout.setSets(updatedWorkout.getSets());
+            workout.setReps(updatedWorkout.getReps());
+            workout.setWeight(updatedWorkout.getWeight());
+            workout.setDate(updatedWorkout.getDate());
+            return workoutLogRepository.save(workout);
+        }).orElseThrow(() -> new RuntimeException("Workout not found with id: " + id));
+    }
+
+
+
 }

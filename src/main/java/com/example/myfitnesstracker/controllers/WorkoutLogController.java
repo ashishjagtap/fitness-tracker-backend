@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/workouts")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class WorkoutLogController {
 
     @Autowired
@@ -26,4 +26,12 @@ public class WorkoutLogController {
     public WorkoutLog addWorkout(@RequestBody WorkoutLog workoutLog) {
         return workoutLogService.saveWorkout(workoutLog);
     }
+
+    // PUT - Update an existing workout log
+    @PutMapping("/{id}")
+    public WorkoutLog updateWorkout(@PathVariable Long id, @RequestBody WorkoutLog workoutDetails) {
+        return workoutLogService.updateWorkout(id, workoutDetails);
+    }
+
+
 }
