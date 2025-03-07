@@ -33,11 +33,5 @@ public class WorkoutLogController {
         return workoutLogService.updateWorkout(id, workoutDetails);
     }
 
-    // DELETE a workout log by ID
-    @DeleteMapping("/{id}")
-    public void deleteWorkout(@PathVariable Long id) {
-        workoutLogService.deleteWorkout(id);
-    }
-
 
 }
