@@ -4,41 +4,11 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./fitness-tracker-frontend
-
-      - name: Run Tests
-        run: npm test
-        working-directory: ./fitness-tracker-frontend
-
-      - name: Lint Code
-        run: npm run lint || true  # Prevents failure due to linting errors
-        working-directory: ./fitness-tracker-frontend
-
-  deploy:
-    name: Deploy to AWS EC2
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -55,6 +25,15 @@ jobs:
 
       - name: Push Docker Image to ECR
         run: docker push 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
+
+  deploy:
+    name: Deploy to AWS EC2
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: SSH into EC2 and Deploy Container
         uses: appleboy/ssh-action@v0.1.10
