@@ -44,24 +44,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Change to your AWS region
+      - name: Authenticate to AWS ECR
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 528757809157.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: SSH into EC2 and Deploy
+      - name: Build Docker Image for x86_64
+        run: docker build --platform linux/amd64 -t fitness-tracker-app .
+
+      - name: Tag Docker Image
+        run: docker tag fitness-tracker-app:latest 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
+
+      - name: Push Docker Image to ECR
+        run: docker push 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
+
+      - name: SSH into EC2 and Deploy Container
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: |
-            ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "Pulling latest image from ECR..."
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 528757809157.dkr.ecr.us-east-1.amazonaws.com
             docker pull 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
             docker stop fitness-tracker-container || true
             docker rm fitness-tracker-container || true
-            docker run -d --name fitness-tracker-container -p 8080:8080 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
+            docker run -d --name fitness-tracker-container --network bridge -p 8080:8080 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
