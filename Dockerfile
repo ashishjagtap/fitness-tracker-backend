@@ -1,17 +1,29 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-slim
+# Use an official OpenJDK 17 runtime as a base image
+FROM openjdk:17-jdk-slim AS builder
 
-# Set the working directory in the container
+# Set working directory inside container
 WORKDIR /app
 
-# Copy the project files into the container
-COPY . .
+# Copy only the required files first (better for Docker caching)
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
 
-# Run Maven to build the application
-RUN ./mvnw clean package -DskipTests
+# Give execute permission to Maven wrapper and build the application
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 
-# Expose the port the app runs on
+# Use a minimal JDK runtime for the final image
+FROM openjdk:17-jdk-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy the built JAR file from the builder stage
+COPY --from=builder /app/target/myfitnesstracker-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose the application port
 EXPOSE 8080
 
 # Run the application
-CMD ["java", "-jar", "target/myfitnesstracker-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "app.jar"]
