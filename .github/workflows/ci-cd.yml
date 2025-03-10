@@ -1,4 +1,4 @@
-name: CI/CD Pipeline to AWS
+name: CI/CD Pipeline to AWS EC2
 
 on:
   push:
@@ -24,18 +24,18 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./fitness-tracker-frontend  # ✅ Fixed indentation
+        working-directory: ./fitness-tracker-frontend
 
       - name: Run Tests
         run: npm test
-        working-directory: ./fitness-tracker-frontend  # ✅ Fixed indentation
+        working-directory: ./fitness-tracker-frontend
 
       - name: Lint Code
         run: npm run lint || true  # Prevents failure due to linting errors
-        working-directory: ./fitness-tracker-frontend  # ✅ Fixed indentation
+        working-directory: ./fitness-tracker-frontend
 
   deploy:
-    name: Deploy to AWS Elastic Beanstalk
+    name: Deploy to AWS EC2
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
@@ -44,17 +44,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Check AWS CLI Version
-        run: aws --version  # ✅ Verify if AWS CLI is already installed
-
-      - name: Update AWS CLI if necessary
-        run: |
-          if ! aws --version; then
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install --update  # ✅ Use --update flag if CLI is already installed
-          fi
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -62,13 +51,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Change to your AWS region
 
-      - name: Deploy to Elastic Beanstalk
-        run: |
-          zip -r deploy.zip . -x "*.git*"
-          aws s3 cp deploy.zip s3://fitness-tracker-app-ash83/
-          VERSION_LABEL=$(date +%Y%m%d%H%M%S)  # Generates a unique version label
-          echo "Deploying with version label: $VERSION_LABEL"
-          aws elasticbeanstalk create-application-version --application-name FitnessTrackerApp --version-label $VERSION_LABEL --source-bundle S3Bucket="fitness-tracker-app-ash83",S3Key="deploy.zip"
-          aws elasticbeanstalk update-environment --environment-name FitnessTrackerApp-env --version-label $VERSION_LABEL
-          
-          
+      - name: SSH into EC2 and Deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            echo "Pulling latest image from ECR..."
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 528757809157.dkr.ecr.us-east-1.amazonaws.com
+            docker pull 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
+            docker stop fitness-tracker-container || true
+            docker rm fitness-tracker-container || true
+            docker run -d --name fitness-tracker-container -p 8080:8080 528757809157.dkr.ecr.us-east-1.amazonaws.com/fitness-tracker:latest
