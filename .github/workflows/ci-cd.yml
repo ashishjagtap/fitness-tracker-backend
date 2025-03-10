@@ -56,7 +56,8 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: |
+            ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             echo "Pulling latest image from ECR..."
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 528757809157.dkr.ecr.us-east-1.amazonaws.com
