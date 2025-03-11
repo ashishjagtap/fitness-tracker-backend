@@ -109,7 +109,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "fitness-tracker-frontend/dist/"
           target: "/var/www/fitness-tracker"
-          
+
       - name: Check Frontend Build Output
         run: ls -l fitness-tracker-frontend/dist/
 
@@ -121,15 +121,22 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo yum install -y nginx
-            sudo systemctl enable nginx
-            sudo systemctl restart nginx
+            echo "Ensuring required directories exist..."
+            sudo mkdir -p /var/www/fitness-tracker
+            sudo chown -R ec2-user:ec2-user /var/www/fitness-tracker
 
-            echo 'Configuring Nginx...'
+            echo "Checking if Nginx is installed..."
+            if ! command -v nginx &> /dev/null; then
+              echo "Installing Nginx..."
+              sudo yum install -y nginx
+              sudo systemctl enable nginx
+            fi
+
+            echo "Configuring Nginx..."
             sudo tee /etc/nginx/conf.d/fitness-tracker.conf > /dev/null <<EOL
             server {
                 listen 80;
-                server_name ${EC2_HOST};
+                server_name _;  # Accept requests from any host
 
                 location / {
                     root /var/www/fitness-tracker;
@@ -145,5 +152,6 @@ jobs:
             }
             EOL
 
-            sudo nginx -t && sudo systemctl restart nginx
+            echo "Testing and reloading Nginx..."
+            sudo nginx -t && sudo systemctl reload nginx
         
