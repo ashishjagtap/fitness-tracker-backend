@@ -79,6 +79,7 @@ jobs:
             docker stop fitness-tracker-container || true
             docker rm fitness-tracker-container || true
             docker run -d --name fitness-tracker-container --network bridge -p 8080:8080 528757809157.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fitness-tracker:latest
+
   deploy-frontend:
     name: Deploy Frontend to AWS EC2
     needs: build
@@ -110,10 +111,6 @@ jobs:
           source: "fitness-tracker-frontend/dist/"
           target: "/var/www/fitness-tracker"
 
-      - name: Check Frontend Build Output
-        run: ls -l fitness-tracker-frontend/dist/
-
-
       - name: SSH into EC2 and Configure Nginx
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -124,26 +121,30 @@ jobs:
             echo "Ensuring required directories exist..."
             sudo mkdir -p /var/www/fitness-tracker
             sudo chown -R ec2-user:ec2-user /var/www/fitness-tracker
-
+            
+            echo "Moving frontend files to correct location..."
+            sudo mv /var/www/fitness-tracker/dist/* /var/www/fitness-tracker/
+            sudo rm -rf /var/www/fitness-tracker/dist
+            
             echo "Checking if Nginx is installed..."
             if ! command -v nginx &> /dev/null; then
               echo "Installing Nginx..."
               sudo yum install -y nginx
               sudo systemctl enable nginx
             fi
-
+            
             echo "Configuring Nginx..."
             sudo tee /etc/nginx/conf.d/fitness-tracker.conf > /dev/null <<EOL
             server {
                 listen 80;
                 server_name _;  # Accept requests from any host
-
+            
                 location / {
                     root /var/www/fitness-tracker;
                     index index.html;
                     try_files \$uri /index.html;
                 }
-
+            
                 location /api/ {
                     proxy_pass http://localhost:8080/;
                     proxy_set_header Host \$host;
@@ -151,7 +152,6 @@ jobs:
                 }
             }
             EOL
-
-            echo "Testing and reloading Nginx..."
-            sudo nginx -t && sudo systemctl reload nginx
-        
+            
+            echo "Testing and restarting Nginx..."
+            sudo nginx -t && sudo systemctl restart nginx
