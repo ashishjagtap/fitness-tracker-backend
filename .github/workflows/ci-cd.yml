@@ -60,7 +60,7 @@ jobs:
           fi
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          
+
       - name: Debug SSH Connection
         run: |
           echo "Checking EC2 connectivity..."
