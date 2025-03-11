@@ -50,6 +50,14 @@ jobs:
               ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Debug SSH Key
+        run: |
+          echo "Length of EC2_SSH_KEY: ${#EC2_SSH_KEY}"
+          echo "First 10 characters: $(echo "$EC2_SSH_KEY" | cut -c1-10)"
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+
       - name: SSH into EC2 and Deploy Container
         uses: appleboy/ssh-action@v0.1.10
         with:
