@@ -50,10 +50,15 @@ jobs:
               ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Debug SSH Key
+      - name: Debug GitHub Secrets
         run: |
-          echo "Length of EC2_SSH_KEY: ${#EC2_SSH_KEY}"
-          echo "First 10 characters: $(echo "$EC2_SSH_KEY" | cut -c1-10)"
+          echo "Checking if EC2_SSH_KEY is available..."
+          if [ -z "$EC2_SSH_KEY" ]; then
+            echo "❌ EC2_SSH_KEY is EMPTY or NOT FOUND!"
+          else
+            echo "✅ EC2_SSH_KEY is present, length: ${#EC2_SSH_KEY}"
+            echo "First 10 characters: ${EC2_SSH_KEY:0:10}"
+          fi
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
