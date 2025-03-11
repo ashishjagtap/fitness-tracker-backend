@@ -60,6 +60,11 @@ jobs:
           fi
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          
+      - name: Debug SSH Connection
+        run: |
+          echo "Checking EC2 connectivity..."
+          nc -zv ${{ secrets.EC2_HOST }} 22 || echo "❌ SSH is not accessible"
 
       - name: SSH into EC2 and Deploy Container
         uses: appleboy/ssh-action@v0.1.10
