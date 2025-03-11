@@ -56,9 +56,9 @@ jobs:
           echo "First 10 characters: $(echo "$EC2_SSH_KEY" | cut -c1-10)"
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          
-      - name: Print GitHub Env Variables
-        run: env
+
+      - name: Debug Secrets Before SSH
+        run: env | grep EC2
 
 
 
