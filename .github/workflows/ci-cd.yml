@@ -107,8 +107,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./fitness-tracker-frontend/dist/*"
+          source: "fitness-tracker-frontend/dist/"
           target: "/var/www/fitness-tracker"
+          
+      - name: Check Frontend Build Output
+        run: ls -l fitness-tracker-frontend/dist/
+
 
       - name: SSH into EC2 and Configure Nginx
         uses: appleboy/ssh-action@v0.1.10
