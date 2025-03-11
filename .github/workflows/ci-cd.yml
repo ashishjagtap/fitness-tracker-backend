@@ -46,8 +46,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: |
-              ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Debug GitHub Secrets
@@ -62,18 +61,12 @@ jobs:
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Debug Secrets Before SSH
-        run: env | grep EC2
-
-
-
       - name: SSH into EC2 and Deploy Container
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: |
-            ${{ secrets.EC2_SSH_KEY }}
+          key:  ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "Pulling latest image from ECR..."
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin 528757809157.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
